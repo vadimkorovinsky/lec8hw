@@ -1,0 +1,73 @@
+---
+- name: download and build war
+
+  hosts: dev
+  become: yes
+
+  vars:
+    project_git_path: https://github.com/boxfuse/boxfuse-sample-java-war-hello.git
+    project_dest_folder: /work/project
+    war_name: hello-1.0.war
+
+  tasks:
+
+  - name: Update the System Packages
+    apt:
+      upgrade: yes
+      update_cache: yes
+
+  - name: Install git
+    apt:
+      name: git
+      state: present
+      update_cache: yes
+
+  - name: Download project
+    git:
+      repo: '{{ project_git_path }}'
+      dest: '{{ project_dest_folder }}'
+
+  - name: Install maven
+    apt:
+      name: maven
+      state: present
+      update_cache: yes
+
+  - name: Run mvn clean in work folder
+    shell:
+      cmd: mvn clean package
+      chdir: '{{ project_dest_folder }}'
+
+  - name: copy file from dev host to local
+    fetch: 
+      src: '{{ project_dest_folder }}/target/{{ war_name }}'
+      dest: '{{ war_name }}'
+      flat: yes
+
+- name: deploy war on tomcat
+
+  hosts: prod
+  become: yes
+
+  vars:
+    tomcat_apps_folder: /var/lib/tomcat9/webapps
+    war_name: hello-1.0.war
+
+  tasks:
+
+  - name: Update the System Packages
+    apt:
+      upgrade: yes
+      update_cache: yes
+
+  - name: Install tomcat
+    apt:
+      name: tomcat9
+      state: present
+      update_cache: yes
+
+  - name: Copy war to tomcat webapps folder
+    copy: 
+        src: '{{ war_name }}'
+        dest: '{{ tomcat_apps_folder }}/{{ war_name }}'
+
