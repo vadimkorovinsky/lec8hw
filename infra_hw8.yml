@@ -50,9 +50,8 @@
         - "--exclude=generated-sources"
         - "--exclude=maven-archiver"
         - "--exclude=maven-status"
-        - "--exclude=hello-1.0
+        - "--exclude=hello-1.0"
     delegate_to: "{{ groups['prod'][0] }}"
-
 
 - name: deploy war on tomcat
 
