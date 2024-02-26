@@ -7,6 +7,7 @@
   vars:
     project_git_path: https://github.com/boxfuse/boxfuse-sample-java-war-hello.git
     project_dest_folder: /work/project
+    tomcat_apps_folder: /var/lib/tomcat9/webapps
     war_name: hello-1.0.war
 
   tasks:
@@ -38,11 +39,20 @@
       cmd: mvn clean package
       chdir: '{{ project_dest_folder }}'
 
-  - name: copy file from dev host to local
-    fetch: 
-      src: '{{ project_dest_folder }}/target/{{ war_name }}'
-      dest: '{{ war_name }}'
-      flat: yes
+  - name: Synchronize work folder on dev host with webapps folder on prod host
+    synchronize:
+      mode: pull
+      dirs: no
+      src: '{{ project_dest_folder }}/target/'
+      dest: '{{ tomcat_apps_folder }}/'
+      rsync_opts:
+        - "--exclude=classes"
+        - "--exclude=generated-sources"
+        - "--exclude=maven-archiver"
+        - "--exclude=maven-status"
+        - "--exclude=hello-1.0
+    delegate_to: "{{ groups['prod'][0] }}"
+
 
 - name: deploy war on tomcat
 
